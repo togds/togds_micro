@@ -1,0 +1,11 @@
+Name: authrpc.rpc
+ListenOn: 0.0.0.0:10004
+
+RedisConfig:
+  Host: "192.168.80.128:6379"
+  Pass: "123456"
+
+Etcd:
+  Hosts:
+  - 192.168.80.128:2379
+  Key: authrpc.rpc
