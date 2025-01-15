@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package togds_auth;
+option go_package="./togds_auth";
+
+message CheckTokenReq {
+  string token = 1;
+}
+message CheckTokenResp {
+  int64 code = 1;
+  string msg = 2;
+  string data = 3;
+
+}
+
+message RefreshReq {
+  string token = 1;
+}
+
+message RefreshResp {
+  int64 code = 1;
+  string msg = 2;
+  string data = 3;
+}
+
+
+service togdsAuthRpc {
+  rpc CheckToken(CheckTokenReq) returns(CheckTokenResp);
+  rpc Refresh(RefreshReq) returns(RefreshResp);
+}

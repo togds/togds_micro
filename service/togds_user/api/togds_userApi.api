@@ -1,0 +1,46 @@
+syntax = "v1"
+
+info (
+	author: "pfage"
+	email:  "1094447564@qq.com"
+)
+
+type (
+	loginReq {
+		username string `header: "username"`
+		password string `header: "password"`
+	}
+	loginResp {
+		code int64  `json: "code"`
+		msg  string `json: "msg"`
+		data string `json "data"`
+	}
+)
+
+type (
+	userListResp {
+		code int64  `json: "code"`
+		msg  string `json: "msg"`
+		data string `json "data"`
+	}
+	userAddReq {
+		username string `header: "username"`
+		password string `header: "password"`
+		phone    string `header: "phone"`
+		email    string `header "email"`
+	}
+)
+
+service togds_user-api {
+	@handler UserLogin
+	post /login (loginReq) returns (loginResp)
+}
+
+@server (
+	jwt: Auth
+)
+service togds_user-api {
+	@handler Adduser
+	post /adduser (userAddReq) returns (loginResp)
+}
+
