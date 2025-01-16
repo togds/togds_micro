@@ -27,6 +27,12 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp, error) {
+	// 查询用户
+	user, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
+	fmt.Println("user", user, in.Username)
+	if err != nil {
+		return nil, err
+	}
 	// todo: add your logic here and delete this line
 	now := time.Now().Unix()
 	accessExpire := l.svcCtx.Config.Auths.AccessExpire

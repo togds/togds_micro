@@ -8,6 +8,7 @@ import (
 type Config struct {
 	zrpc.RpcServerConf
 	RedisConfig redis.RedisConf
+	DataSource  string
 	Auths       struct {
 		AccessSecret string
 		AccessExpire int64
