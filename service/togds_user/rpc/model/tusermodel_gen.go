@@ -43,6 +43,8 @@ type (
 		Password   string         `db:"password"`
 		Email      sql.NullString `db:"email"`
 		Phone      sql.NullString `db:"phone"`
+		// Createtime time.Time      `db:"createtime"`
+		// Updatetime time.Time      `db:"updatetime"`
 		Createtime time.Time      `db:"createtime"`
 		Updatetime time.Time      `db:"updatetime"`
 		Status     int64          `db:"status"` // 1为激活0为未激活

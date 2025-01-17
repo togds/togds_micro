@@ -1,6 +1,6 @@
 Name: togdsuserrpc.rpc
 ListenOn: 0.0.0.0:10002
-DataSource: root:password@tcp(10.1.22.127:3306)/togds
+DataSource: togds:Minrray@123@tcp(10.1.22.126:3306)/togds?parseTime=true
 RedisConfig:
   Host: "10.1.22.126:6379"
   Pass: "123456"

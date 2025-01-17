@@ -28,10 +28,14 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 
 func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp, error) {
 	// 查询用户
-	user, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
-	fmt.Println("user", user, in.Username)
+	_, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
+	// user, err := l.svcCtx.Model.FindOne(l.ctx, 3)
 	if err != nil {
-		return nil, err
+		return &togds_userRpc.LoginResp{
+			Code: 10004,
+			Msg:  "用户不存在",
+			Data: err.Error(),
+		}, nil
 	}
 	// todo: add your logic here and delete this line
 	now := time.Now().Unix()
