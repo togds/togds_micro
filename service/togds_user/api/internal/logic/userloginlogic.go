@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"fmt"
 
 	"togds/service/togds_user/api/internal/svc"
 	"togds/service/togds_user/api/internal/types"
@@ -27,14 +26,12 @@ func NewUserLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserLog
 
 func (l *UserLoginLogic) UserLogin(req *types.LoginReq) (resp *types.LoginResp, err error) {
 	// todo: add your logic here and delete this line
-	fmt.Println("req--------------------------------", req)
 	//TogdsUserRpcClient
 	rpcResp, err := l.svcCtx.TogdsUserRpcClient.Login(l.ctx, &loginrpcre.LoginReq{
 		Username: req.Username,
 		Password: req.Password,
 	})
 	if err != nil {
-		fmt.Println("err-------------------------------", err)
 		return nil, err
 	}
 	return &types.LoginResp{

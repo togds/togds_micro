@@ -28,8 +28,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 
 func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp, error) {
 	// 查询用户
-	_, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
-	// user, err := l.svcCtx.Model.FindOne(l.ctx, 3)
+	userinfo, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
 	if err != nil {
 		return &togds_userRpc.LoginResp{
 			Code: 10004,
@@ -37,6 +36,18 @@ func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp
 			Data: err.Error(),
 		}, nil
 	}
+	// 判断密码
+	if userinfo.Password != in.Password {
+		return &togds_userRpc.LoginResp{
+			Code: 10004,
+			Msg:  "密码错误",
+			Data: "err",
+		}, nil
+	}
+	// 查询token是否存在
+	redisToken, err := l.svcCtx.Redis.Get(fmt.Sprintf("%d", userinfo.UserId))
+	fmt.Printf("获取到的token为：", redisToken)
+	fmt.Printf("ssssss", userinfo.UserId)
 	// todo: add your logic here and delete this line
 	now := time.Now().Unix()
 	accessExpire := l.svcCtx.Config.Auths.AccessExpire
@@ -50,7 +61,15 @@ func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp
 			Data: "err",
 		}, nil
 	}
-	err = l.svcCtx.Redis.SetexCtx(l.ctx, fmt.Sprintf("token:%s", jwtToken), in.Username, int(10000))
+	err = l.svcCtx.Redis.SetexCtx(l.ctx, fmt.Sprintf("%d:%s", userinfo.UserId, jwtToken), in.Username, int(10000))
+	if err != nil {
+		return &togds_userRpc.LoginResp{
+			Code: 10001,
+			Msg:  "插入redis失败",
+			Data: jwtToken,
+		}, nil
+	}
+	err = l.svcCtx.Redis.SetexCtx(l.ctx, fmt.Sprintf("%s:%d", jwtToken, userinfo.UserId), in.Username, int(10000))
 	if err != nil {
 		return &togds_userRpc.LoginResp{
 			Code: 10001,
@@ -71,9 +90,7 @@ func (l *LoginLogic) getJwtToken(secretKey string, iat, seconds, userId int64) (
 	claims["exp"] = iat + seconds
 	claims["iat"] = iat
 	claims["userId"] = userId
-	fmt.Println("开始生成tokensssss")
 	token := jwt.New(jwt.SigningMethodHS256)
-	fmt.Println("开始生成tokensssssddddddddddddd", token)
 	token.Claims = claims
 	return token.SignedString([]byte(secretKey))
 }
