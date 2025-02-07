@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"togds/service/togds_user/rpc/internal/svc"
@@ -29,30 +30,33 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp, error) {
 	// 查询用户
 	userinfo, err := l.svcCtx.Model.FindOneUsername(l.ctx, in.Username)
-	if err != nil {
+	if err != nil || len(in.Password) != 32 || userinfo.Password != in.Password {
 		return &togds_userRpc.LoginResp{
 			Code: 10004,
-			Msg:  "用户不存在",
-			Data: err.Error(),
-		}, nil
-	}
-	// 判断密码
-	if userinfo.Password != in.Password {
-		return &togds_userRpc.LoginResp{
-			Code: 10004,
-			Msg:  "密码错误",
+			Msg:  "登录失败",
 			Data: "err",
 		}, nil
 	}
+
 	// 查询token是否存在
-	redisToken, err := l.svcCtx.Redis.Get(fmt.Sprintf("%d", userinfo.UserId))
-	fmt.Printf("获取到的token为：", redisToken)
-	fmt.Printf("ssssss", userinfo.UserId)
-	// todo: add your logic here and delete this line
+	redisToken, err := l.svcCtx.Redis.GetCtx(l.ctx, strconv.Itoa(int(userinfo.UserId)))
+	if err != nil {
+		return &togds_userRpc.LoginResp{
+			Code: 10004,
+			Msg:  "登录失败11111",
+			Data: "err",
+		}, nil
+	}
+
+	if redisToken != "" {
+		return &togds_userRpc.LoginResp{
+			Code: 10000,
+			Msg:  "登录成功",
+			Data: redisToken,
+		}, nil
+	}
 	now := time.Now().Unix()
 	accessExpire := l.svcCtx.Config.Auths.AccessExpire
-	// accessExpire := l.svcCtx.Config.Auth.
-	fmt.Println("开始生成token")
 	jwtToken, err := l.getJwtToken(l.svcCtx.Config.Auths.AccessSecret, now, accessExpire, 19191919)
 	if err != nil {
 		return &togds_userRpc.LoginResp{
@@ -61,7 +65,7 @@ func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp
 			Data: "err",
 		}, nil
 	}
-	err = l.svcCtx.Redis.SetexCtx(l.ctx, fmt.Sprintf("%d:%s", userinfo.UserId, jwtToken), in.Username, int(10000))
+	err = l.svcCtx.Redis.SetCtx(l.ctx, strconv.Itoa(int(userinfo.UserId)), jwtToken)
 	if err != nil {
 		return &togds_userRpc.LoginResp{
 			Code: 10001,
@@ -69,7 +73,7 @@ func (l *LoginLogic) Login(in *togds_userRpc.LoginReq) (*togds_userRpc.LoginResp
 			Data: jwtToken,
 		}, nil
 	}
-	err = l.svcCtx.Redis.SetexCtx(l.ctx, fmt.Sprintf("%s:%d", jwtToken, userinfo.UserId), in.Username, int(10000))
+	err = l.svcCtx.Redis.SetCtx(l.ctx, jwtToken, strconv.Itoa(int(userinfo.UserId)))
 	if err != nil {
 		return &togds_userRpc.LoginResp{
 			Code: 10001,
